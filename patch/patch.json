@@ -1,0 +1,8 @@
+{
+    "name": "Select text in Browser",
+    "description": "A sailfish-browser patch enabling text selection on page",
+    "category": "browser",
+    "infos": {
+        "maintainer": "coderus"
+    }
+}

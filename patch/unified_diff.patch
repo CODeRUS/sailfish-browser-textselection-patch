@@ -1,0 +1,118 @@
+From dcc63d18bb0e2351dc6c38279397c3e2e6a76ea3 Mon Sep 17 00:00:00 2001
+From: CODeRUS <coderusinbox@gmail.com>
+Date: Thu, 21 Aug 2014 19:20:17 +0600
+Subject: [PATCH 1/1] Enabled and restyled text selection
+
+---
+ /usr/share/sailfish-browser/pages/components/TextSelectionController.qml | 12 +++++++++--
+ /usr/share/sailfish-browser/pages/components/TextSelectionHandle.qml     | 32 ++++++++++++++++++++++------
+ /usr/share/sailfish-browser/pages/components/WebView.qml                 |  2 +-
+ 3 files changed, 37 insertions(+), 9 deletions(-)
+
+diff --git a/usr/share/sailfish-browser/pages/components/TextSelectionController.qml b/usr/share/sailfish-browser/pages/components/TextSelectionController.qml
+index f8dad42..a20014b 100644
+--- a/usr/share/sailfish-browser/pages/components/TextSelectionController.qml
++++ b/usr/share/sailfish-browser/pages/components/TextSelectionController.qml
+@@ -33,8 +33,10 @@ Item {
+ 
+         start.x = (_cssRange.startX - diffX) * resolution - start.width
+         start.y = (_cssRange.startY - diffY) * resolution
++        start.handleSize = _cssRange.startHeightShift * 2
+         end.x = (_cssRange.endX - diffX) * resolution
+         end.y = (_cssRange.endY - diffY) * resolution
++        end.handleSize = _cssRange.endHeightShift * 2
+ 
+         timer.restart()
+     }
+@@ -45,17 +47,23 @@ Item {
+         }
+ 
+         var resolution = _engine.resolution
++        var startHeightShift = data.start.height / 2
++        var endHeightShift = data.end.height / 2
+ 
+         start.x = (data.start.xPos * resolution) - start.width
+-        start.y = data.start.yPos * resolution
++        start.y = (data.start.yPos - startHeightShift) * resolution
++        start.handleSize = startHeightShift * 2
+         end.x = data.end.xPos * resolution
+-        end.y = data.end.yPos * resolution
++        end.y = (data.end.yPos - endHeightShift) * resolution
++        end.handleSize = endHeightShift * 2
+ 
+         _cssRange = {
+             "startX": data.start.xPos,
+             "startY": data.start.yPos,
+             "endX": data.end.xPos,
+             "endY": data.end.yPos,
++            "startHeightShift": startHeightShift,
++            "endHeightShift": endHeightShift,
+             "origOffsetX": _engine.scrollableOffset.x,
+             "origOffsetY": _engine.scrollableOffset.y,
+         }
+diff --git a/usr/share/sailfish-browser/pages/components/TextSelectionHandle.qml b/usr/share/sailfish-browser/pages/components/TextSelectionHandle.qml
+index f8282d1..1693498 100644
+--- a/usr/share/sailfish-browser/pages/components/TextSelectionHandle.qml
++++ b/usr/share/sailfish-browser/pages/components/TextSelectionHandle.qml
+@@ -20,6 +20,7 @@ Item {
+ 
+     property string type
+     property Item content
++    property int handleSize: Theme.itemSizeSmall
+ 
+     // the moving property is updated upon dragActive change to make sure
+     // that Browser:SelectionMoveStart is sent out before Browser:SelectionMove
+@@ -56,12 +57,31 @@ Item {
+         }
+     }
+ 
+-    Image {
+-        anchors.top: parent.top
+-        anchors.left: type === "end" ? parent.left : undefined
+-        anchors.right: type === "start" ? parent.right : undefined
+-        source: type === "start" ? "image://theme/icon-browser-dragger-start?" + Theme.highlightBackgroundColor :
+-                                   "image://theme/icon-browser-dragger-end?" + Theme.highlightBackgroundColor
++    //Image {
++    //    anchors.top: parent.top
++    //    anchors.left: type === "end" ? parent.left : undefined
++    //    anchors.right: type === "start" ? parent.right : undefined
++    //    source: type === "start" ? "image://theme/icon-browser-dragger-start?" + Theme.highlightBackgroundColor :
++    //                               "image://theme/icon-browser-dragger-end?" + Theme.highlightBackgroundColor
++    //}
++
++    Rectangle {
++        id: handleRect
++        width: handleSize * 2
++        height: width
++        radius: width / 2
++        smooth: true
++        anchors {
++            bottom: parent.top
++            bottomMargin: -radius
++            left: type === "end" ? parent.left : undefined
++            right: type === "start" ? parent.right : undefined
++            leftMargin: type === "end" ? -1 * (width / 2) : 0
++            rightMargin: type === "start" ? -1 * (width / 2) : 0
++        }
++        color: "transparent"
++        border.width: 8
++        border.color: Theme.rgba(Theme.highlightBackgroundColor, 0.8)
+     }
+ 
+     MouseArea {
+diff --git a/usr/share/sailfish-browser/pages/components/WebView.qml b/usr/share/sailfish-browser/pages/components/WebView.qml
+index bcc5726..2fcb2da 100644
+--- a/usr/share/sailfish-browser/pages/components/WebView.qml
++++ b/usr/share/sailfish-browser/pages/components/WebView.qml
+@@ -350,7 +350,7 @@ WebContainer {
+ 
+             // We decided to disable "text selection" until we understand how it
+             // should look like in Sailfish.
+-            // TextSelectionController {}
++            TextSelectionController {}
+             states: State {
+                 name: "boundHeightControl"
+                 when: container.inputPanelVisible || !container.foreground
+-- 
+1.9.1
+
